@@ -1,0 +1,18 @@
+{
+    "Amazon": {
+        "AssetProcessor": {
+            "Settings": {
+                "ScanFolder PathTracing/Assets": {
+                    "watch": "@GEMROOT:PathTracing@/Assets",
+                    "recursive": 1,
+                    "order": 101
+                },
+                "ScanFolder PathTracing/Registry": {
+                    "watch": "@GEMROOT:PathTracing@/Registry",
+                    "recursive": 1,
+                    "order": 102
+                }
+            }
+        }
+    }
+}
