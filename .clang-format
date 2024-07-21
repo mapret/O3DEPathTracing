@@ -1,0 +1,19 @@
+BasedOnStyle: Mozilla
+
+AlwaysBreakAfterReturnType: None
+AlwaysBreakAfterDefinitionReturnType: None
+BreakBeforeBraces: Allman
+ColumnLimit: 120
+FixNamespaceComments: true
+IncludeCategories:
+  - Regex: '".*"'
+    Priority: 1
+  - Regex: '<PathTracing/.*>'
+    Priority: 2
+  - Regex: '<.+\.h>'
+    Priority: 3
+  - Regex: '<.*>'
+    Priority: 4
+IndentWidth: 2
+InsertNewlineAtEOF: true
+LambdaBodyIndentation: OuterScope
