@@ -1,0 +1,43 @@
+{
+    "Type": "JsonSerialization",
+    "Version": 1,
+    "ClassName": "PassAsset",
+    "ClassData": {
+        "PassTemplate": {
+            "Name": "PathTracingPassTemplate",
+            "PassClass": "RayTracingPass",
+            "Slots": [
+                {
+                    "Name": "ColorInputOutput",
+                    "ShaderInputName": "m_fallbackColor",
+                    "SlotType": "InputOutput",
+                    "ScopeAttachmentUsage": "Shader"
+                }
+            ],
+            "Connections": [
+                {
+                    "LocalSlot": "ColorInputOutput",
+                    "AttachmentRef": {
+                        "Pass": "AuxGeomPass",
+                        "Attachment": "ColorInputOutput"
+                    }
+                }
+            ],
+            "PassData":  {
+                "$type": "RayTracingPassData",
+                "RayGenerationShaderAsset": { "FilePath": "Shaders/PathTracingRayGeneration.shader" },
+                "RayGenerationShaderName": "RayGeneration",
+                "ClosestHitShaderAsset": { "FilePath": "Shaders/PathTracingClosestHit.shader" },
+                "ClosestHitShaderName": "ClosestHit",
+                "ClosestHitProceduralShaderAsset": { "FilePath": "Shaders/PathTracingClosestHitProcedural.shader" },
+                "ClosestHitProceduralShaderName": "ClosestHitProcedural",
+                "MissShaderAsset": { "FilePath": "Shaders/PathTracingMiss.shader" },
+                "MissShaderName": "Miss",
+                "MaxPayloadSize": 16,
+                "MaxRecursionDepth": 1,
+                "Make Fullscreen Pass": true,
+                "BindViewSrg": true
+            }
+        }
+    }
+}

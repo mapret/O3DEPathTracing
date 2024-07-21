@@ -1,6 +1,7 @@
 #pragma once
 
 #include <PathTracing/PathTracingBus.h>
+#include <Atom/RPI.Public/Pass/PassSystemInterface.h>
 #include <AzCore/Component/Component.h>
 #include <AzCore/Component/TickBus.h>
 
@@ -41,6 +42,11 @@ protected:
   // AZTickBus interface implementation
   void OnTick(float deltaTime, AZ::ScriptTimePoint time) override;
   ////////////////////////////////////////////////////////////////////////
+
+private:
+  void LoadPassTemplateMappings();
+
+  AZ::RPI::PassSystemInterface::OnReadyLoadTemplatesEvent::Handler m_loadTemplatesHandler;
 };
 
 } // namespace PathTracing

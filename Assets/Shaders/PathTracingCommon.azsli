@@ -1,0 +1,6 @@
+#pragma once
+
+struct PayloadData
+{
+  float3 m_color;
+};

@@ -1,5 +1,6 @@
 #include "PathTracingEditorSystemComponent.h"
 #include "PathTracingModuleInterface.h"
+#include "Tools/PathTracingEditorComponent.h"
 #include <PathTracing/PathTracingTypeIds.h>
 
 namespace PathTracing
@@ -19,6 +20,7 @@ public:
     m_descriptors.insert(m_descriptors.end(),
                          {
                            PathTracingEditorSystemComponent::CreateDescriptor(),
+                           PathTracingEditorComponent::CreateDescriptor(),
                          });
   }
 

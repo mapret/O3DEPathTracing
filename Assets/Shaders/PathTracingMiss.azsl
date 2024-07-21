@@ -1,0 +1,8 @@
+#include <Atom/Features/RayTracing/RayTracingSrgs.azsli>
+#include "PathTracingCommon.azsli"
+
+[shader("miss")]
+void Miss(inout PayloadData payload)
+{
+  payload.m_color = float3(0, 0, 0);
+}

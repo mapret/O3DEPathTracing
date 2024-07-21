@@ -1,5 +1,7 @@
 #include "PathTracingSystemComponent.h"
+#include "PathTracingFeatureProcessor.h"
 #include <PathTracing/PathTracingTypeIds.h>
+#include <Atom/RPI.Public/FeatureProcessorFactory.h>
 #include <AzCore/Serialization/SerializeContext.h>
 
 namespace PathTracing
@@ -12,6 +14,8 @@ void PathTracingSystemComponent::Reflect(AZ::ReflectContext* context)
   {
     serializeContext->Class<PathTracingSystemComponent, AZ::Component>()->Version(0);
   }
+
+  PathTracingFeatureProcessor::Reflect(context);
 }
 
 void PathTracingSystemComponent::GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided)
@@ -24,7 +28,10 @@ void PathTracingSystemComponent::GetIncompatibleServices(AZ::ComponentDescriptor
   incompatible.push_back(AZ_CRC_CE("PathTracingService"));
 }
 
-void PathTracingSystemComponent::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& /*required*/) {}
+void PathTracingSystemComponent::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
+{
+  required.push_back(AZ_CRC_CE("RPISystem"));
+}
 
 void PathTracingSystemComponent::GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& /*dependent*/) {}
 
@@ -50,14 +57,32 @@ void PathTracingSystemComponent::Activate()
 {
   PathTracingRequestBus::Handler::BusConnect();
   AZ::TickBus::Handler::BusConnect();
+
+  AZ::RPI::FeatureProcessorFactory::Get()->RegisterFeatureProcessor<PathTracingFeatureProcessor>();
+
+  auto* passSystem{ AZ::RPI::PassSystemInterface::Get() };
+  AZ_Assert(passSystem, "PathTracing Gem - cannot get the pass system.");
+  m_loadTemplatesHandler =
+    AZ::RPI::PassSystemInterface::OnReadyLoadTemplatesEvent::Handler([this]() { this->LoadPassTemplateMappings(); });
+  passSystem->ConnectEvent(m_loadTemplatesHandler);
 }
 
 void PathTracingSystemComponent::Deactivate()
 {
+  AZ::RPI::FeatureProcessorFactory::Get()->UnregisterFeatureProcessor<PathTracingFeatureProcessor>();
+
   AZ::TickBus::Handler::BusDisconnect();
   PathTracingRequestBus::Handler::BusDisconnect();
 }
 
 void PathTracingSystemComponent::OnTick(float /*deltaTime*/, AZ::ScriptTimePoint /*time*/) {}
 
+void PathTracingSystemComponent::LoadPassTemplateMappings()
+{
+  auto* passSystem{ AZ::RPI::PassSystemInterface::Get() };
+  AZ_Assert(passSystem, "PathTracing Gem - cannot get the pass system.");
+
+  constexpr const char* passTemplatesFile{ "Passes/PathTracingPassTemplates.azasset" };
+  passSystem->LoadPassTemplateMappings(passTemplatesFile);
+}
 } // namespace PathTracing

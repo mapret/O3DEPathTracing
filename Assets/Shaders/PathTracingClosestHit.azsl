@@ -1,0 +1,15 @@
+#include <Atom/Features/RayTracing/RayTracingSrgs.azsli>
+#include <Atom/Features/RayTracing/RayTracingMaterialUtils.azsli>
+#include <Atom/Features/RayTracing/RayTracingSceneUtils.azsli>
+#include "PathTracingCommon.azsli"
+
+[shader("closesthit")]
+void ClosestHit(inout PayloadData payload, BuiltInTriangleIntersectionAttributes attrib)
+{
+  RayTracingSceneSrg::MeshInfo meshInfo = RayTracingSceneSrg::m_meshInfo[NonUniformResourceIndex(InstanceIndex())];
+  VertexData vertexData = GetHitInterpolatedVertexData(meshInfo, attrib.barycentrics);
+  RayTracingMaterialSrg::MaterialInfo materialInfo = RayTracingMaterialSrg::m_materialInfo[NonUniformResourceIndex(InstanceIndex())];
+  TextureData textureData = GetHitTextureData(materialInfo, vertexData.m_uv);
+
+  payload.m_color = textureData.m_baseColor.xyz;
+}

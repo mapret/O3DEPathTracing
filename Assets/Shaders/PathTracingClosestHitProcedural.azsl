@@ -1,0 +1,10 @@
+#include <Atom/Features/RayTracing/RayTracingIntersectionAttributes.azsli>
+#include <Atom/Features/RayTracing/RayTracingSrgs.azsli>
+#include "PathTracingCommon.azsli"
+
+[shader("closesthit")]
+void ClosestHitProcedural(inout PayloadData payload, ProceduralGeometryIntersectionAttributes attrib)
+{
+  // TODO: Implement this
+  payload.m_color = float3(1, 0, 0);
+}

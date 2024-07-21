@@ -1,0 +1,22 @@
+#include <Atom/Features/RayTracing/RayTracingSrgs.azsli>
+#include "PathTracingCommon.azsli"
+
+[shader("raygeneration")] void RayGeneration()
+{
+  uint2 pixelCoords = DispatchRaysIndex().xy;
+  uint2 dimensions = DispatchRaysDimensions().xy;
+  float2 coordsNDC = ((float2)pixelCoords / dimensions * 2.f - 1.f) * float2(1.f, -1.f);
+
+  float4 rayTarget = mul(ViewSrg::m_viewProjectionInverseMatrix, float4(coordsNDC, 1.f, 1.f));
+  float3 rayDir = normalize(rayTarget.xyz / rayTarget.w - ViewSrg::m_worldPosition);
+
+  RayDesc ray;
+  ray.Origin = ViewSrg::m_worldPosition;
+  ray.Direction = rayDir;
+  ray.TMin = 0.f;
+  ray.TMax = RayTracingGlobalSrg::m_maxRayLength;
+  PayloadData payload = (PayloadData)0;
+  TraceRay(RayTracingSceneSrg::m_scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, ray, payload);
+
+  RayTracingGlobalSrg::m_fallbackColor[pixelCoords] = float4(payload.m_color, 1);
+}
