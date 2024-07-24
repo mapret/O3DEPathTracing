@@ -4,5 +4,6 @@
 [shader("miss")]
 void Miss(inout PayloadData payload)
 {
-  payload.m_color = float3(0, 0, 0);
+  payload.m_hitT = -1.f;
+  payload.m_color = float3(0.f, 0.f, 0.f);
 }

@@ -34,7 +34,7 @@
                 "MissShaderAsset": { "FilePath": "Shaders/PathTracingMiss.shader" },
                 "MissShaderName": "Miss",
                 "MaxPayloadSize": 16,
-                "MaxRecursionDepth": 1,
+                "MaxRecursionDepth": 2,
                 "Make Fullscreen Pass": true,
                 "BindViewSrg": true
             }

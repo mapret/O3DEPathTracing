@@ -3,6 +3,16 @@
 #include <Atom/Features/RayTracing/RayTracingSceneUtils.azsli>
 #include "PathTracingCommon.azsli"
 
+#include <Atom/Features/PBR/LightingUtils.azsli>
+
+void ApplyIBL(RayTracingSurfaceData surfaceData, inout float3 diffuseColor)
+{
+  float sceneIblExposure = pow(2.f, SceneSrg::m_iblExposure);
+  float3 irradianceDir = MultiplyVectorQuaternion(surfaceData.m_normal, SceneSrg::m_iblOrientation);
+  float3 diffuseSample = SceneSrg::m_diffuseEnvMap.SampleLevel(SceneSrg::m_samplerEnv, GetCubemapCoords(irradianceDir), 0).rgb;
+  diffuseColor += diffuseSample * surfaceData.m_albedo * surfaceData.m_diffuseResponse * sceneIblExposure;
+}
+
 [shader("closesthit")]
 void ClosestHit(inout PayloadData payload, BuiltInTriangleIntersectionAttributes attrib)
 {
@@ -11,5 +21,20 @@ void ClosestHit(inout PayloadData payload, BuiltInTriangleIntersectionAttributes
   RayTracingMaterialSrg::MaterialInfo materialInfo = RayTracingMaterialSrg::m_materialInfo[NonUniformResourceIndex(InstanceIndex())];
   TextureData textureData = GetHitTextureData(materialInfo, vertexData.m_uv);
 
-  payload.m_color = textureData.m_baseColor.xyz;
+  RayTracingSurfaceData surfaceData;
+  surfaceData.m_scene = RayTracingSceneSrg::m_scene;
+  surfaceData.m_worldPosition = mul(ObjectToWorld3x4(), float4(vertexData.m_position, 1.f));
+  surfaceData.m_normal = vertexData.m_normal;
+  surfaceData.m_normal = normalize(mul(meshInfo.m_worldInvTranspose, float4(vertexData.m_normal, 0.f)));
+  surfaceData.m_albedo = textureData.m_baseColor.xyz;
+  surfaceData.m_diffuseResponse = 1.f;
+
+  float3 diffuseColor = float3(0.f, 0.f, 0.f);
+  for (int index = 0; index < RayTracingSceneSrg::m_directionalLightCount; index++)
+  {
+    ApplyDirectionalLight(RayTracingSceneSrg::m_directionalLights[index], surfaceData, diffuseColor);
+  }
+  ApplyIBL(surfaceData, diffuseColor);
+
+  payload.m_color = diffuseColor;
 }
