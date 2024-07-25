@@ -15,8 +15,17 @@
   ray.Direction = rayDir;
   ray.TMin = 0.f;
   ray.TMax = RayTracingGlobalSrg::m_maxRayLength;
-  PayloadData payload = (PayloadData)0;
-  TraceRay(RayTracingSceneSrg::m_scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, ray, payload);
 
-  RayTracingGlobalSrg::m_fallbackColor[pixelCoords] = float4(payload.m_color, 1);
+  float3 albedoSum = float3(0.f, 0.f, 0.f);
+  uint sampleCount = 1;
+  for (uint i = 0; i < sampleCount; i++)
+  {
+    PayloadData payload = (PayloadData)0;
+    payload.m_bounces = 2;
+    payload.m_rng.Init(pixelCoords.x, pixelCoords.y, asuint(rayDir.x), i);
+    TraceRay(RayTracingSceneSrg::m_scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, ray, payload);
+    albedoSum += payload.m_color;
+  }
+
+  RayTracingGlobalSrg::m_fallbackColor[pixelCoords] = float4(albedoSum / sampleCount, 1);
 }

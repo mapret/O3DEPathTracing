@@ -1,0 +1,62 @@
+#pragma once
+
+class Xorshift64
+{
+  uint64_t state;
+
+  void Init(uint a)
+  {
+    state = a;
+    Rotate();
+  }
+
+  void Init(uint a, uint b)
+  {
+    state = a;
+    Rotate();
+    state ^= b;
+    Rotate();
+  }
+
+  void Init(uint a, uint b, uint c)
+  {
+    state = a;
+    Rotate();
+    state ^= b;
+    Rotate();
+    state ^= c;
+    Rotate();
+  }
+
+  void Init(uint a, uint b, uint c, uint d)
+  {
+    state = a;
+    Rotate();
+    state ^= b;
+    Rotate();
+    state ^= c;
+    Rotate();
+    state ^= d;
+    Rotate();
+  }
+
+  void Rotate()
+  {
+    state ^= state >> 12;
+    state ^= state << 25;
+    state ^= state >> 27;
+  }
+
+  uint GetUint()
+  {
+    Rotate();
+    return (uint)((state * 0x2545F4914F6CDD1DULL) >> 32);
+  }
+
+  float2 GetFloat2()
+  {
+    float x = (float)GetUint() / 0xFFFFFFFF;
+    float y = (float)GetUint() / 0xFFFFFFFF;
+    return float2(x, y);
+  }
+};

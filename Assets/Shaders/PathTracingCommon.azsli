@@ -1,11 +1,14 @@
 #pragma once
 
+#include "Random.azsli"
 #include <Atom/Features/PBR/Microfacet/Brdf.azsli>
 
 struct PayloadData
 {
-  float m_hitT;
+  Xorshift64 m_rng;
   float3 m_color;
+  int m_bounces;
+  bool m_wasMiss;
 };
 
 struct RayTracingSurfaceData
@@ -17,12 +20,28 @@ struct RayTracingSurfaceData
   float m_diffuseResponse;
 };
 
+float3 UniformSampleHemisphere(float2 xi)
+{
+  float r = sqrt(max(0.f, 1.f - xi.x * xi.x));
+  float phi = TWO_PI * xi.y;
+  return float3(r * cos(phi), r * sin(phi), xi.x);
+}
+
+float3 UniformSampleHemisphereDirection(float2 xi, float3 normalWS)
+{
+  float3 dir = UniformSampleHemisphere(xi);
+  float3 upVector = abs(normalWS.z) < 0.999f ? float3(0.f, 0.f, 1.f) : float3(1.f, 0.f, 0.f);
+  float3 tangentWS = normalize(cross(upVector, normalWS));
+  float3 bitangentWS = cross(normalWS, tangentWS);
+  return tangentWS * dir.x + bitangentWS * dir.y + normalWS * dir.z;
+}
+
 void ApplyDirectionalLight(RayTracingSceneSrg::DirectionalLight light,
                            RayTracingSurfaceData surfaceData,
                            inout float3 diffuseColor)
 {
   RayDesc lightRay;
-  lightRay.Origin = surfaceData.m_worldPosition + surfaceData.m_normal * 0.01f;
+  lightRay.Origin = surfaceData.m_worldPosition + surfaceData.m_normal * 0.001f;
   lightRay.Direction = normalize(-light.m_direction);
   lightRay.TMin = 0.f;
   lightRay.TMax = 1e20f;
@@ -36,7 +55,7 @@ void ApplyDirectionalLight(RayTracingSceneSrg::DirectionalLight light,
            lightRay,
            lightRayPayload);
 
-  if (lightRayPayload.m_hitT < 0.f)
+  if (lightRayPayload.m_wasMiss)
   {
     diffuseColor +=
       DiffuseLambertian(
