@@ -60,6 +60,7 @@ ly_add_target(
     NAMESPACE Gem
     FILES_CMAKE
         pathtracing_shared_files.cmake
+        ../Assets/pathtracing_asset_files.cmake
         ${pal_dir}/pathtracing_shared_files.cmake
     INCLUDE_DIRECTORIES
         PUBLIC
