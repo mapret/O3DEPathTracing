@@ -1,6 +1,12 @@
 #include <Atom/Features/RayTracing/RayTracingSrgs.azsli>
 #include "PathTracingCommon.azsli"
 
+// Since all ray tracing shaders need to include the exact same SRGs (see comment in RayTracingSrgs.azsli), no
+// additional SRGs or SRG members can be added. Therefore, some existing members of RayTracingGlobalSrg are reused for
+// path tracing
+#define AccumulationImage RayTracingGlobalSrg::m_fallbackAlbedo
+#define OutputImage       RayTracingGlobalSrg::m_fallbackColor
+
 [shader("raygeneration")] void RayGeneration()
 {
   uint2 pixelCoords = DispatchRaysIndex().xy;
@@ -16,16 +22,17 @@
   ray.TMin = 0.f;
   ray.TMax = RayTracingGlobalSrg::m_maxRayLength;
 
-  float3 albedoSum = float3(0.f, 0.f, 0.f);
+  float3 colorSum = float3(0.f, 0.f, 0.f);
   uint sampleCount = 1;
   for (uint i = 0; i < sampleCount; i++)
   {
     PayloadData payload = (PayloadData)0;
     payload.m_bounces = 2;
-    payload.m_rng.Init(pixelCoords.x, pixelCoords.y, asuint(rayDir.x), i);
+    payload.m_rng.Init(pixelCoords.x, pixelCoords.y, asuint(rayDir.x), asuint(AccumulationImage[pixelCoords].x), i);
     TraceRay(RayTracingSceneSrg::m_scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, ray, payload);
-    albedoSum += payload.m_color;
+    colorSum += payload.m_color;
   }
 
-  RayTracingGlobalSrg::m_fallbackColor[pixelCoords] = float4(albedoSum / sampleCount, 1);
+  AccumulationImage[pixelCoords] = AccumulationImage[pixelCoords] * 0.9f + float4(colorSum / sampleCount, 0) * 0.1f;
+  OutputImage[pixelCoords] = float4(AccumulationImage[pixelCoords].xyz, 1);
 }

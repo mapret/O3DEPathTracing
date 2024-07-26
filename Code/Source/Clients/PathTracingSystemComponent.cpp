@@ -1,5 +1,6 @@
 #include "PathTracingSystemComponent.h"
 #include "PathTracingFeatureProcessor.h"
+#include "PathTracingPass.h"
 #include <PathTracing/PathTracingTypeIds.h>
 #include <Atom/RPI.Public/FeatureProcessorFactory.h>
 #include <AzCore/Serialization/SerializeContext.h>
@@ -65,6 +66,8 @@ void PathTracingSystemComponent::Activate()
   m_loadTemplatesHandler =
     AZ::RPI::PassSystemInterface::OnReadyLoadTemplatesEvent::Handler([this]() { this->LoadPassTemplateMappings(); });
   passSystem->ConnectEvent(m_loadTemplatesHandler);
+
+  passSystem->AddPassCreator(AZ::Name{ "PathTracingPass" }, &PathTracingPass::Create);
 }
 
 void PathTracingSystemComponent::Deactivate()

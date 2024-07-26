@@ -5,11 +5,17 @@
     "ClassData": {
         "PassTemplate": {
             "Name": "PathTracingPassTemplate",
-            "PassClass": "RayTracingPass",
+            "PassClass": "PathTracingPass",
             "Slots": [
                 {
                     "Name": "ColorInputOutput",
                     "ShaderInputName": "m_fallbackColor",
+                    "SlotType": "InputOutput",
+                    "ScopeAttachmentUsage": "Shader"
+                },
+                {
+                    "Name": "AccumulationImage",
+                    "ShaderInputName": "m_fallbackAlbedo",
                     "SlotType": "InputOutput",
                     "ScopeAttachmentUsage": "Shader"
                 }

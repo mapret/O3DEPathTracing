@@ -40,6 +40,20 @@ class Xorshift64
     Rotate();
   }
 
+  void Init(uint a, uint b, uint c, uint d, uint e)
+  {
+    state = a;
+    Rotate();
+    state ^= b;
+    Rotate();
+    state ^= c;
+    Rotate();
+    state ^= d;
+    Rotate();
+    state ^= e;
+    Rotate();
+  }
+
   void Rotate()
   {
     state ^= state >> 12;
