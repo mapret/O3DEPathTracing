@@ -6,6 +6,13 @@
 // path tracing
 #define AccumulationImage RayTracingGlobalSrg::m_fallbackAlbedo
 #define OutputImage       RayTracingGlobalSrg::m_fallbackColor
+#define ConfigBufferIndex RayTracingGlobalSrg::m_reflectionMethod
+
+struct PathTracingConfig
+{
+  uint m_frameCount;
+  uint m_clearRequest;
+};
 
 [shader("raygeneration")] void RayGeneration()
 {
@@ -22,17 +29,23 @@
   ray.TMin = 0.f;
   ray.TMax = RayTracingGlobalSrg::m_maxRayLength;
 
+  PathTracingConfig config = Bindless::GetRWByteAddressBuffer(ConfigBufferIndex).Load<PathTracingConfig>(0);
+  if (config.m_clearRequest)
+  {
+    AccumulationImage[pixelCoords] = float4(0.f, 0.f, 0.f, 0.f);
+  }
+
   float3 colorSum = float3(0.f, 0.f, 0.f);
   uint sampleCount = 1;
   for (uint i = 0; i < sampleCount; i++)
   {
     PayloadData payload = (PayloadData)0;
-    payload.m_bounces = 2;
-    payload.m_rng.Init(pixelCoords.x, pixelCoords.y, asuint(rayDir.x), asuint(AccumulationImage[pixelCoords].x), i);
+    payload.m_bounces = 3;
+    payload.m_rng.Init(pixelCoords.x, pixelCoords.y, config.m_frameCount, i);
     TraceRay(RayTracingSceneSrg::m_scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, ray, payload);
     colorSum += payload.m_color;
   }
 
-  AccumulationImage[pixelCoords] = AccumulationImage[pixelCoords] * 0.9f + float4(colorSum / sampleCount, 0) * 0.1f;
-  OutputImage[pixelCoords] = float4(AccumulationImage[pixelCoords].xyz, 1);
+  AccumulationImage[pixelCoords] += float4(colorSum / sampleCount, 1.f);
+  OutputImage[pixelCoords] = float4(AccumulationImage[pixelCoords].xyz / AccumulationImage[pixelCoords].w, 1.f);
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Random.azsli"
-#include <Atom/Features/PBR/Microfacet/Brdf.azsli>
+#include <Atom/RPI/Math.azsli>
 
 struct PayloadData
 {
@@ -34,6 +34,12 @@ float3 UniformSampleHemisphereDirection(float2 xi, float3 normalWS)
   float3 tangentWS = normalize(cross(upVector, normalWS));
   float3 bitangentWS = cross(normalWS, tangentWS);
   return tangentWS * dir.x + bitangentWS * dir.y + normalWS * dir.z;
+}
+
+float3 DiffuseLambertian(float3 albedo, float3 normal, float3 dirToLight, float3 diffuseResponse)
+{
+  float NdotL = saturate(dot(normal, dirToLight));
+  return albedo * NdotL * diffuseResponse;
 }
 
 void ApplyDirectionalLight(RayTracingSceneSrg::DirectionalLight light,

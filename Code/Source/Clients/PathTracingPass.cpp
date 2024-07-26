@@ -1,7 +1,16 @@
 #include "PathTracingPass.h"
-
 #include <Atom/RPI.Public/Image/AttachmentImagePool.h>
 #include <Atom/RPI.Public/Image/ImageSystemInterface.h>
+#include <AzFramework/Components/CameraBus.h>
+
+namespace
+{
+struct PathTracingConfig
+{
+  AZ::u32 m_frameCount;
+  AZ::u32 m_clearRequest;
+};
+} // namespace
 
 namespace PathTracing
 {
@@ -11,7 +20,7 @@ AZ::RPI::Ptr<PathTracingPass> PathTracingPass::Create(const AZ::RPI::PassDescrip
 }
 
 PathTracingPass::PathTracingPass(const AZ::RPI::PassDescriptor& descriptor)
-  : AZ::Render::RayTracingPass{ descriptor }
+  : BaseClass{ descriptor }
 {
 }
 
@@ -34,5 +43,38 @@ void PathTracingPass::BuildInternal()
                                                                        AZ::RHI::Format::R16G16B16A16_FLOAT);
   auto accumulationImage{ AZ::RPI::AttachmentImage::Create(createRequest) };
   AttachImageToSlot(AZ::Name{ "AccumulationImage" }, accumulationImage);
+
+  AZ::RPI::CommonBufferDescriptor bufferDescriptor;
+  bufferDescriptor.m_poolType = AZ::RPI::CommonBufferPoolType::ReadWrite;
+  bufferDescriptor.m_bufferName = "PathTracing config buffer";
+  bufferDescriptor.m_byteCount = sizeof(PathTracingConfig);
+  bufferDescriptor.m_elementSize = sizeof(PathTracingConfig);
+  m_configBuffer = AZ::RPI::BufferSystemInterface::Get()->CreateBufferFromCommonPool(bufferDescriptor);
+  m_configBufferView = m_configBuffer->GetRHIBuffer()
+                         ->GetDeviceBuffer(AZ::RHI::MultiDevice::DefaultDeviceIndex)
+                         ->GetBufferView(m_configBuffer->GetBufferViewDescriptor());
+
+  BaseClass::BuildInternal();
+}
+
+void PathTracingPass::FrameBeginInternal(FramePrepareParams params)
+{
+  AZ::Transform cameraTransform;
+  Camera::ActiveCameraRequestBus::BroadcastResult(cameraTransform,
+                                                  &Camera::ActiveCameraRequestBus::Events::GetActiveCameraTransform);
+  bool cameraMoved{ !cameraTransform.IsClose(m_previousCameraTransform) };
+  if (cameraMoved)
+  {
+    m_previousCameraTransform = cameraTransform;
+  }
+
+  GetShaderResourceGroup()->SetConstant(m_configNameIndex, m_configBufferView->GetBindlessReadWriteIndex());
+
+  PathTracingConfig config;
+  config.m_frameCount = m_frameCount++;
+  config.m_clearRequest = cameraMoved;
+  m_configBuffer->UpdateData(&config, sizeof(PathTracingConfig), 0);
+
+  BaseClass::FrameBeginInternal(params);
 }
 } // namespace PathTracing

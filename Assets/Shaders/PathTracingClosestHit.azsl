@@ -28,6 +28,8 @@ void ClosestHit(inout PayloadData payload, BuiltInTriangleIntersectionAttributes
   surfaceData.m_albedo = textureData.m_baseColor.xyz;
   surfaceData.m_diffuseResponse = 1.f;
 
+  float3 diffuseColor = textureData.m_emissiveColor;
+
   if (payload.m_bounces > 1)
   {
     RayDesc ray;
@@ -41,19 +43,10 @@ void ClosestHit(inout PayloadData payload, BuiltInTriangleIntersectionAttributes
     payload2.m_rng = payload.m_rng;
     TraceRay(RayTracingSceneSrg::m_scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, ray, payload2);
 
-    if (!payload2.m_wasMiss)
-    {
-      payload.m_color =
-        DiffuseLambertian(surfaceData.m_albedo, surfaceData.m_normal, ray.Direction, surfaceData.m_diffuseResponse) *
-        payload2.m_color;
-      return;
-    }
+    diffuseColor +=
+      DiffuseLambertian(surfaceData.m_albedo, surfaceData.m_normal, ray.Direction, surfaceData.m_diffuseResponse) *
+      payload2.m_color;
   }
 
-  float3 diffuseColor = float3(0.f, 0.f, 0.f);
-  for (int index = 0; index < RayTracingSceneSrg::m_directionalLightCount; index++)
-  {
-    ApplyDirectionalLight(RayTracingSceneSrg::m_directionalLights[index], surfaceData, diffuseColor);
-  }
   payload.m_color = diffuseColor;
 }
