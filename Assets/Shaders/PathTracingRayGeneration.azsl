@@ -24,8 +24,6 @@ struct PathTracingConfig
   float3 rayDir = normalize(rayTarget.xyz / rayTarget.w - ViewSrg::m_worldPosition);
 
   RayDesc ray;
-  ray.Origin = ViewSrg::m_worldPosition;
-  ray.Direction = rayDir;
   ray.TMin = 0.f;
   ray.TMax = RayTracingGlobalSrg::m_maxRayLength;
 
@@ -37,13 +35,37 @@ struct PathTracingConfig
 
   float3 colorSum = float3(0.f, 0.f, 0.f);
   uint sampleCount = 1;
+  Xorshift64 rng;
+  rng.Init(pixelCoords.x, pixelCoords.y, config.m_frameCount);
+  const float3 diffuseResponse = float3(1.f, 1.f, 1.f);
+
   for (uint i = 0; i < sampleCount; i++)
   {
-    PayloadData payload = (PayloadData)0;
-    payload.m_bounces = 3;
-    payload.m_rng.Init(pixelCoords.x, pixelCoords.y, config.m_frameCount, i);
-    TraceRay(RayTracingSceneSrg::m_scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, ray, payload);
-    colorSum += payload.m_color;
+    ray.Origin = ViewSrg::m_worldPosition;
+    ray.Direction = rayDir;
+
+    float3 diffuseColor = float3(1.f, 1.f, 1.f);
+    for (uint bounces = 0; bounces < 3; bounces++)
+    {
+      PayloadData payload = (PayloadData)0;
+      TraceRay(RayTracingSceneSrg::m_scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, ray, payload);
+
+      if (payload.m_wasMiss)
+      {
+        break;
+      }
+      if (any(payload.m_hitEmissive))
+      {
+        colorSum += diffuseColor * payload.m_hitEmissive;
+        break;
+      }
+      else
+      {
+        ray.Origin = payload.m_hitPosition + payload.m_hitNormal * 0.001f;
+        ray.Direction = ImportanceSampleBeckmann(rng.GetFloat2(), payload.m_hitNormal);
+        diffuseColor *= payload.m_hitAlbedo * diffuseResponse;
+      }
+    }
   }
 
   AccumulationImage[pixelCoords] += float4(colorSum / sampleCount, 1.f);

@@ -5,10 +5,11 @@
 
 struct PayloadData
 {
-  Xorshift64 m_rng;
-  float3 m_color;
-  int m_bounces;
   bool m_wasMiss;
+  float3 m_hitPosition;
+  float3 m_hitNormal;
+  float3 m_hitAlbedo;
+  float3 m_hitEmissive;
 };
 
 struct RayTracingSurfaceData
@@ -17,23 +18,55 @@ struct RayTracingSurfaceData
   float3 m_worldPosition;
   float3 m_normal;
   float3 m_albedo;
-  float m_diffuseResponse;
+  float3 m_diffuseResponse;
 };
 
-float3 UniformSampleHemisphere(float2 xi)
+float3 SphericalDirection(float sinTheta, float cosTheta, float phi)
+{
+  return float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
+}
+
+float3 UniformSampleHemisphereUnit(float2 xi)
 {
   float r = sqrt(max(0.f, 1.f - xi.x * xi.x));
   float phi = TWO_PI * xi.y;
-  return float3(r * cos(phi), r * sin(phi), xi.x);
+  return SphericalDirection(r, xi.x, phi);
 }
 
-float3 UniformSampleHemisphereDirection(float2 xi, float3 normalWS)
+float3 ImportanceSampleBeckmannUnit(float2 xi)
 {
-  float3 dir = UniformSampleHemisphere(xi);
+  float alpha = 1.f;
+
+  float logSample = log(1 - xi.x);
+  if (isinf(logSample))
+    logSample = 0;
+  float tan2theta = -alpha * alpha * logSample;
+  float phi = xi.y * TWO_PI;
+
+  float cosTheta = 1.f / sqrt(1 + tan2theta);
+  float sinTheta = sqrt(max(0.f, 1.f - cosTheta * cosTheta));
+
+  return SphericalDirection(sinTheta, cosTheta, phi);
+}
+
+float3 TransformVectorToWorldSpace(float3 normalWS, float3 direction)
+{
   float3 upVector = abs(normalWS.z) < 0.999f ? float3(0.f, 0.f, 1.f) : float3(1.f, 0.f, 0.f);
   float3 tangentWS = normalize(cross(upVector, normalWS));
   float3 bitangentWS = cross(normalWS, tangentWS);
-  return tangentWS * dir.x + bitangentWS * dir.y + normalWS * dir.z;
+  return tangentWS * direction.x + bitangentWS * direction.y + normalWS * direction.z;
+}
+
+float3 UniformSampleHemisphere(float2 xi, float3 normalWS)
+{
+  float3 dir = UniformSampleHemisphereUnit(xi);
+  return TransformVectorToWorldSpace(normalWS, dir);
+}
+
+float3 ImportanceSampleBeckmann(float2 xi, float3 normalWS)
+{
+  float3 dir = ImportanceSampleBeckmannUnit(xi);
+  return TransformVectorToWorldSpace(normalWS, dir);
 }
 
 float3 DiffuseLambertian(float3 albedo, float3 normal, float3 dirToLight, float3 diffuseResponse)

@@ -1,5 +1,10 @@
 #pragma once
 
+float UniformUintToFloat(uint value)
+{
+  return (float)value / 0xFFFFFFFF;
+}
+
 class Xorshift64
 {
   uint64_t state;
@@ -69,8 +74,8 @@ class Xorshift64
 
   float2 GetFloat2()
   {
-    float x = (float)GetUint() / 0xFFFFFFFF;
-    float y = (float)GetUint() / 0xFFFFFFFF;
+    float x = UniformUintToFloat(GetUint());
+    float y = UniformUintToFloat(GetUint());
     return float2(x, y);
   }
 };

@@ -39,7 +39,7 @@
                 "ClosestHitProceduralShaderName": "ClosestHitProcedural",
                 "MissShaderAsset": { "FilePath": "Shaders/PathTracingMiss.shader" },
                 "MissShaderName": "Miss",
-                "MaxPayloadSize": 32,
+                "MaxPayloadSize": 52,
                 "MaxRecursionDepth": 4,
                 "Make Fullscreen Pass": true,
                 "BindViewSrg": true

@@ -5,5 +5,4 @@
 void Miss(inout PayloadData payload)
 {
   payload.m_wasMiss = true;
-  payload.m_color = float3(0, 0, 0);
 }
