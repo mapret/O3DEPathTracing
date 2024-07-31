@@ -2,6 +2,7 @@
 #include <Atom/RPI.Public/Image/AttachmentImagePool.h>
 #include <Atom/RPI.Public/Image/ImageSystemInterface.h>
 #include <AzFramework/Components/CameraBus.h>
+#include <RayTracing/RayTracingFeatureProcessor.h>
 
 namespace
 {
@@ -68,11 +69,19 @@ void PathTracingPass::FrameBeginInternal(FramePrepareParams params)
     m_previousCameraTransform = cameraTransform;
   }
 
+  auto* rayTracingFeatureProcessor{ GetScene()->GetFeatureProcessor<AZ::Render::RayTracingFeatureProcessor>() };
+  bool materialChanged{ rayTracingFeatureProcessor &&
+                        rayTracingFeatureProcessor->GetMaterialInfoGpuBuffer().get() != m_previousMaterialBuffer };
+  if (materialChanged)
+  {
+    m_previousMaterialBuffer = rayTracingFeatureProcessor->GetMaterialInfoGpuBuffer().get();
+  }
+
   GetShaderResourceGroup()->SetConstant(m_configNameIndex, m_configBufferView->GetBindlessReadWriteIndex());
 
   PathTracingConfig config;
   config.m_frameCount = m_frameCount++;
-  config.m_clearRequest = cameraMoved;
+  config.m_clearRequest = cameraMoved || materialChanged;
   m_configBuffer->UpdateData(&config, sizeof(PathTracingConfig), 0);
 
   BaseClass::FrameBeginInternal(params);

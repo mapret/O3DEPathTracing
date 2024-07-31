@@ -28,5 +28,6 @@ private:
   AZ::Data::Instance<AZ::RPI::Buffer> m_configBuffer;
   AZ::RHI::Ptr<AZ::RHI::DeviceBufferView> m_configBufferView;
   AZ::Transform m_previousCameraTransform;
+  AZ::RPI::Buffer* m_previousMaterialBuffer{ nullptr };
 };
 } // namespace PathTracing
