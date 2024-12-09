@@ -41,7 +41,7 @@
                 "MissShaderName": "Miss",
                 "MaxPayloadSize": 52,
                 "MaxRecursionDepth": 4,
-                "Make Fullscreen Pass": true,
+                "FullscreenDispatch": true,
                 "BindViewSrg": true
             }
         }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RayTracing/RayTracingPass.h>
+#include <Atom/Feature/RayTracing/RayTracingPass.h>
 
 namespace PathTracing
 {

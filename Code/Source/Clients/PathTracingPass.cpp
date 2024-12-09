@@ -1,8 +1,9 @@
 #include "PathTracingPass.h"
+#include <Atom/Feature/RayTracing/RayTracingFeatureProcessorInterface.h>
 #include <Atom/RPI.Public/Image/AttachmentImagePool.h>
 #include <Atom/RPI.Public/Image/ImageSystemInterface.h>
+#include <Atom/RPI.Public/Scene.h>
 #include <AzFramework/Components/CameraBus.h>
-#include <RayTracing/RayTracingFeatureProcessor.h>
 
 namespace
 {
@@ -69,7 +70,9 @@ void PathTracingPass::FrameBeginInternal(FramePrepareParams params)
     m_previousCameraTransform = cameraTransform;
   }
 
-  auto* rayTracingFeatureProcessor{ GetScene()->GetFeatureProcessor<AZ::Render::RayTracingFeatureProcessor>() };
+  auto* rayTracingFeatureProcessor{
+    GetScene()->GetFeatureProcessor<AZ::Render::RayTracingFeatureProcessorInterface>()
+  };
   bool materialChanged{ rayTracingFeatureProcessor &&
                         rayTracingFeatureProcessor->GetMaterialInfoGpuBuffer().get() != m_previousMaterialBuffer };
   if (materialChanged)
