@@ -11,7 +11,7 @@ AZ_COMPONENT_IMPL(PathTracingEditorSystemComponent,
 
 void PathTracingEditorSystemComponent::Reflect(AZ::ReflectContext* context)
 {
-  if (auto serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
+  if (auto* serializeContext{ azrtti_cast<AZ::SerializeContext*>(context) })
   {
     serializeContext->Class<PathTracingEditorSystemComponent, PathTracingSystemComponent>()->Version(0);
   }
@@ -34,14 +34,12 @@ void PathTracingEditorSystemComponent::GetIncompatibleServices(
   incompatible.push_back(AZ_CRC_CE("PathTracingEditorService"));
 }
 
-void PathTracingEditorSystemComponent::GetRequiredServices(
-  [[maybe_unused]] AZ::ComponentDescriptor::DependencyArrayType& required)
+void PathTracingEditorSystemComponent::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
 {
   BaseSystemComponent::GetRequiredServices(required);
 }
 
-void PathTracingEditorSystemComponent::GetDependentServices(
-  [[maybe_unused]] AZ::ComponentDescriptor::DependencyArrayType& dependent)
+void PathTracingEditorSystemComponent::GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& dependent)
 {
   BaseSystemComponent::GetDependentServices(dependent);
 }

@@ -11,7 +11,7 @@ constexpr const char* PathTracingModuleInterfaceTypeId{ "{29D07FD8-924B-4B30-A41
 constexpr const char* PathTracingModuleTypeId{ "{D0A319E2-97AC-4AE1-8C32-BCFA4F3D1C68}" };
 // The Editor Module by default is mutually exclusive with the Client Module
 // so they use the Same TypeId
-constexpr const char* PathTracingEditorModuleTypeId = PathTracingModuleTypeId;
+constexpr const char* PathTracingEditorModuleTypeId{ PathTracingModuleTypeId };
 
 // Interface TypeIds
 constexpr const char* PathTracingRequestsTypeId{ "{D6F9879D-CC57-47ED-A7A8-8DD0C3A782AB}" };

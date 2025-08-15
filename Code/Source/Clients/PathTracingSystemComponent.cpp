@@ -11,7 +11,7 @@ AZ_COMPONENT_IMPL(PathTracingSystemComponent, "PathTracingSystemComponent", Path
 
 void PathTracingSystemComponent::Reflect(AZ::ReflectContext* context)
 {
-  if (auto serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
+  if (auto* serializeContext{ azrtti_cast<AZ::SerializeContext*>(context) })
   {
     serializeContext->Class<PathTracingSystemComponent, AZ::Component>()->Version(0);
   }
