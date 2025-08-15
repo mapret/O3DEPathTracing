@@ -1,0 +1,7 @@
+#pragma once
+
+struct PathTracingConfig
+{
+  uint m_frameCount;
+  uint m_clearRequest;
+};

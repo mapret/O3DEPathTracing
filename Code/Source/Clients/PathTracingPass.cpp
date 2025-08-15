@@ -5,17 +5,11 @@
 #include <Atom/RPI.Public/Scene.h>
 #include <AzFramework/Components/CameraBus.h>
 
-namespace
-{
-struct PathTracingConfig
-{
-  AZ::u32 m_frameCount;
-  AZ::u32 m_clearRequest;
-};
-} // namespace
-
 namespace PathTracing
 {
+using uint = AZ::u32;
+#include "../../Assets/Shaders/PathTracingConfig.azsli"
+
 AZ::RPI::Ptr<PathTracingPass> PathTracingPass::Create(const AZ::RPI::PassDescriptor& descriptor)
 {
   return aznew PathTracingPass{ descriptor };
@@ -47,7 +41,7 @@ void PathTracingPass::BuildInternal()
   AttachImageToSlot(AZ::Name{ "AccumulationImage" }, accumulationImage);
 
   AZ::RPI::CommonBufferDescriptor bufferDescriptor;
-  bufferDescriptor.m_poolType = AZ::RPI::CommonBufferPoolType::ReadWrite;
+  bufferDescriptor.m_poolType = AZ::RPI::CommonBufferPoolType::ReadOnly;
   bufferDescriptor.m_bufferName = "PathTracing config buffer";
   bufferDescriptor.m_byteCount = sizeof(PathTracingConfig);
   bufferDescriptor.m_elementSize = sizeof(PathTracingConfig);
@@ -80,7 +74,7 @@ void PathTracingPass::FrameBeginInternal(FramePrepareParams params)
     m_previousMaterialBuffer = rayTracingFeatureProcessor->GetMaterialInfoGpuBuffer().get();
   }
 
-  GetShaderResourceGroup()->SetConstant(m_configNameIndex, m_configBufferView->GetBindlessReadWriteIndex());
+  GetShaderResourceGroup()->SetConstant(m_configNameIndex, m_configBufferView->GetBindlessReadIndex());
 
   PathTracingConfig config;
   config.m_frameCount = m_frameCount++;

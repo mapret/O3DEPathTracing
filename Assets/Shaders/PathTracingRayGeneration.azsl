@@ -1,5 +1,6 @@
 #include <Atom/Features/RayTracing/RayTracingSrgs.azsli>
 #include "PathTracingCommon.azsli"
+#include "PathTracingConfig.azsli"
 
 // Since all ray tracing shaders need to include the exact same SRGs (see comment in RayTracingSrgs.azsli), no
 // additional SRGs or SRG members can be added. Therefore, some existing members of RayTracingGlobalSrg are reused for
@@ -7,12 +8,6 @@
 #define AccumulationImage RayTracingGlobalSrg::m_fallbackAlbedo
 #define OutputImage       RayTracingGlobalSrg::m_fallbackColor
 #define ConfigBufferIndex RayTracingGlobalSrg::m_reflectionMethod
-
-struct PathTracingConfig
-{
-  uint m_frameCount;
-  uint m_clearRequest;
-};
 
 [shader("raygeneration")] void RayGeneration()
 {
@@ -27,7 +22,7 @@ struct PathTracingConfig
   ray.TMin = 0.f;
   ray.TMax = RayTracingGlobalSrg::m_maxRayLength;
 
-  PathTracingConfig config = Bindless::GetRWByteAddressBuffer(ConfigBufferIndex).Load<PathTracingConfig>(0);
+  PathTracingConfig config = Bindless::GetByteAddressBuffer(ConfigBufferIndex).Load<PathTracingConfig>(0);
   if (config.m_clearRequest)
   {
     AccumulationImage[pixelCoords] = float4(0.f, 0.f, 0.f, 0.f);

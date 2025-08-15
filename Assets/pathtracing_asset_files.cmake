@@ -7,6 +7,7 @@ set(FILES
     Shaders/PathTracingClosestHitProcedural.azsl
     Shaders/PathTracingClosestHitProcedural.shader
     Shaders/PathTracingCommon.azsli
+    Shaders/PathTracingConfig.azsli
     Shaders/PathTracingMiss.azsl
     Shaders/PathTracingMiss.shader
     Shaders/PathTracingRayGeneration.azsl
