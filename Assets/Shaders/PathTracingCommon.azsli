@@ -68,37 +68,3 @@ float3 ImportanceSampleBeckmann(float2 xi, float3 normalWS)
   float3 dir = ImportanceSampleBeckmannUnit(xi);
   return TransformVectorToWorldSpace(normalWS, dir);
 }
-
-float3 DiffuseLambertian(float3 albedo, float3 normal, float3 dirToLight, float3 diffuseResponse)
-{
-  float NdotL = saturate(dot(normal, dirToLight));
-  return albedo * NdotL * diffuseResponse;
-}
-
-void ApplyDirectionalLight(RayTracingSceneSrg::DirectionalLight light,
-                           RayTracingSurfaceData surfaceData,
-                           inout float3 diffuseColor)
-{
-  RayDesc lightRay;
-  lightRay.Origin = surfaceData.m_worldPosition + surfaceData.m_normal * 0.001f;
-  lightRay.Direction = normalize(-light.m_direction);
-  lightRay.TMin = 0.f;
-  lightRay.TMax = 1e20f;
-  PayloadData lightRayPayload = (PayloadData)0;
-  TraceRay(surfaceData.m_scene,
-           RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER,
-           0xFF,
-           0,
-           1,
-           0,
-           lightRay,
-           lightRayPayload);
-
-  if (lightRayPayload.m_wasMiss)
-  {
-    diffuseColor +=
-      DiffuseLambertian(
-        surfaceData.m_albedo, surfaceData.m_normal, normalize(-light.m_direction), surfaceData.m_diffuseResponse) *
-      light.m_rgbIntensity;
-  }
-}
