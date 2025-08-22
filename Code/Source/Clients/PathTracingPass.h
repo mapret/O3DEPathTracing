@@ -23,11 +23,14 @@ protected:
   void FrameBeginInternal(FramePrepareParams params) override;
 
 private:
+  bool ShouldClearImage();
+
   unsigned m_frameCount{ 0 };
   AZ::RHI::ShaderInputNameIndex m_configNameIndex{ "m_reflectionMethod" }; // Need to reuse existing SRG member
   AZ::Data::Instance<AZ::RPI::Buffer> m_configBuffer;
   AZ::RHI::Ptr<AZ::RHI::DeviceBufferView> m_configBufferView;
   AZ::Transform m_previousCameraTransform;
   AZ::RPI::Buffer* m_previousMaterialBuffer{ nullptr };
+  AZ::u32 m_rayTracingRevision{ 0 };
 };
 } // namespace PathTracing

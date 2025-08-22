@@ -55,6 +55,18 @@ void PathTracingPass::BuildInternal()
 
 void PathTracingPass::FrameBeginInternal(FramePrepareParams params)
 {
+  GetShaderResourceGroup()->SetConstant(m_configNameIndex, m_configBufferView->GetBindlessReadIndex());
+
+  PathTracingConfig config;
+  config.m_frameCount = m_frameCount++;
+  config.m_clearRequest = ShouldClearImage();
+  m_configBuffer->UpdateData(&config, sizeof(PathTracingConfig), 0);
+
+  BaseClass::FrameBeginInternal(params);
+}
+
+bool PathTracingPass::ShouldClearImage()
+{
   AZ::Transform cameraTransform;
   Camera::ActiveCameraRequestBus::BroadcastResult(cameraTransform,
                                                   &Camera::ActiveCameraRequestBus::Events::GetActiveCameraTransform);
@@ -67,20 +79,24 @@ void PathTracingPass::FrameBeginInternal(FramePrepareParams params)
   auto* rayTracingFeatureProcessor{
     GetScene()->GetFeatureProcessor<AZ::Render::RayTracingFeatureProcessorInterface>()
   };
-  bool materialChanged{ rayTracingFeatureProcessor &&
-                        rayTracingFeatureProcessor->GetMaterialInfoGpuBuffer().get() != m_previousMaterialBuffer };
+  if (!rayTracingFeatureProcessor)
+  {
+    AZ_Assert(false, "PathTracing Gem - RayTracingFeatureProcessorInterface not found");
+    return false;
+  }
+
+  bool materialChanged{ rayTracingFeatureProcessor->GetMaterialInfoGpuBuffer().get() != m_previousMaterialBuffer };
   if (materialChanged)
   {
     m_previousMaterialBuffer = rayTracingFeatureProcessor->GetMaterialInfoGpuBuffer().get();
   }
 
-  GetShaderResourceGroup()->SetConstant(m_configNameIndex, m_configBufferView->GetBindlessReadIndex());
+  bool rayTracingRevisionOutdated{ m_rayTracingRevision != rayTracingFeatureProcessor->GetRevision() };
+  if (rayTracingRevisionOutdated)
+  {
+    m_rayTracingRevision = rayTracingFeatureProcessor->GetRevision();
+  }
 
-  PathTracingConfig config;
-  config.m_frameCount = m_frameCount++;
-  config.m_clearRequest = cameraMoved || materialChanged;
-  m_configBuffer->UpdateData(&config, sizeof(PathTracingConfig), 0);
-
-  BaseClass::FrameBeginInternal(params);
+  return cameraMoved || materialChanged || rayTracingRevisionOutdated;
 }
 } // namespace PathTracing
