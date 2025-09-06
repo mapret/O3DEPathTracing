@@ -1,9 +1,10 @@
 #include <Atom/Features/RayTracing/RayTracingSrgs.azsli>
-#include <Atom/Features/RayTracing/RayTracingMaterialUtils.azsli>
-#include <Atom/Features/RayTracing/RayTracingSceneUtils.azsli>
-#include "PathTracingCommon.azsli"
 
+#include <Atom/Features/FallbackPBRMaterial/MaterialInfoUtil.azsli>
 #include <Atom/Features/PBR/LightingUtils.azsli>
+#include <Atom/Features/RayTracing/RayTracingSceneUtils.azsli>
+
+#include "PathTracingCommon.azsli"
 
 void ApplyIBL(RayTracingSurfaceData surfaceData, inout float3 diffuseColor)
 {
@@ -16,13 +17,15 @@ void ApplyIBL(RayTracingSurfaceData surfaceData, inout float3 diffuseColor)
 [shader("closesthit")]
 void ClosestHit(inout PayloadData payload, BuiltInTriangleIntersectionAttributes attrib)
 {
-  RayTracingSceneSrg::MeshInfo meshInfo = RayTracingSceneSrg::m_meshInfo[NonUniformResourceIndex(InstanceIndex())];
-  VertexData vertexData = GetHitInterpolatedVertexData(meshInfo, attrib.barycentrics);
-  RayTracingMaterialSrg::MaterialInfo materialInfo = RayTracingMaterialSrg::m_materialInfo[NonUniformResourceIndex(InstanceIndex())];
-  TextureData textureData = GetHitTextureData(materialInfo, vertexData.m_uv);
+  VsInput vertexData = GetHitInterpolatedVertexData(InstanceID(), PrimitiveIndex(), attrib.barycentrics);
 
-  payload.m_hitPosition = mul(ObjectToWorld3x4(), float4(vertexData.m_position, 1.f));
-  payload.m_hitNormal = normalize(mul(meshInfo.m_worldInvTranspose, float4(vertexData.m_normal, 0.f)));
+  MaterialInfo materialInfo;
+  GetMaterialInfoEntry(InstanceID(), materialInfo);
+
+  TextureData textureData = GetFallbackPBRMaterialTextureData(materialInfo, RayTracingGlobalSrg::LinearSampler, vertexData.uv0);
+
+  payload.m_hitPosition = mul(ObjectToWorld3x4(), float4(vertexData.position, 1.f));
+  payload.m_hitNormal = normalize(mul(WorldToObject4x3(), vertexData.normal));
   payload.m_hitAlbedo = textureData.m_baseColor.xyz;
   payload.m_hitEmissive = textureData.m_emissiveColor;
 }

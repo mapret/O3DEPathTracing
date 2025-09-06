@@ -85,18 +85,12 @@ bool PathTracingPass::ShouldClearImage()
     return false;
   }
 
-  bool materialChanged{ rayTracingFeatureProcessor->GetMaterialInfoGpuBuffer().get() != m_previousMaterialBuffer };
-  if (materialChanged)
-  {
-    m_previousMaterialBuffer = rayTracingFeatureProcessor->GetMaterialInfoGpuBuffer().get();
-  }
-
   bool rayTracingRevisionOutdated{ m_rayTracingRevision != rayTracingFeatureProcessor->GetRevision() };
-  if (rayTracingRevisionOutdated)
+  if (rayTracingRevisionOutdated) // This catches material changes, scene geometry changes and entity transform changes
   {
     m_rayTracingRevision = rayTracingFeatureProcessor->GetRevision();
   }
 
-  return cameraMoved || materialChanged || rayTracingRevisionOutdated;
+  return cameraMoved || rayTracingRevisionOutdated;
 }
 } // namespace PathTracing
